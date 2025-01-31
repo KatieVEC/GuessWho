@@ -14,6 +14,8 @@
         .start-btn:hover { background: #45a049; }
         .reset-btn { background: #e74c3c; color: white; } /* Red */
         .reset-btn:hover { background: #c0392b; }
+        .skip-btn { background: #f39c12; color: white; } /* Yellow */
+        .skip-btn:hover { background: #e67e22; }
         input { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-top: 10px; }
         canvas { border-radius: 8px; margin-top: 20px; width: 400px; height: auto; }
         #timer, #score { font-size: 20px; margin: 10px; }
@@ -36,6 +38,7 @@
         <br>
         <input type="text" id="guess-input" placeholder="Enter your guess" onkeydown="checkEnter(event)">
         <button onclick="checkGuess()">Submit</button>
+        <button class="skip-btn" onclick="skipRound()">Skip</button>
         <p id="message"></p>
     </div>
 
@@ -129,6 +132,12 @@
             } else {
                 document.getElementById("message").innerText = "Try again!";
             }
+        }
+
+        function skipRound() {
+            clearInterval(interval);
+            document.getElementById("message").innerText = "You skipped the round.";
+            setTimeout(nextRound, 2000); // Move to next round immediately after skipping
         }
 
         function nextRound() {
