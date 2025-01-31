@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess Who</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4; }
+        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100vh; }
+        #main-menu, #game-screen, #end-screen { display: none; background: white; padding: 20px; border-radius: 12px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1); }
+        #main-menu { display: flex; }
+        button { font-size: 18px; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; transition: 0.3s; }
+        .start-btn { background: #4CAF50; color: white; } /* Green */
+        .start-btn:hover { background: #45a049; }
+        .reset-btn { background: #e74c3c; color: white; } /* Red */
+        .reset-btn:hover { background: #c0392b; }
+        input { padding: 10px; border-radius: 8px; border: 1px solid #ccc; font-size: 16px; margin-top: 10px; }
+        canvas { border-radius: 8px; margin-top: 20px; width: 400px; height: auto; }
+        #timer, #score { font-size: 20px; margin: 10px; }
+    </style>
+</head>
+<body>
+
+    <!-- Main Menu -->
+    <div id="main-menu" class="container">
+        <h1>Guess Who</h1>
+        <button class="start-btn" onclick="startGame()">Start</button>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="game-screen" class="container">
+        <h2>Who is this?</h2>
+        <p id="timer">Time left: <span id="time">15</span>s</p>
+        <p id="score">Score: <span id="score-value">0</span></p>
+        <canvas id="pixelCanvas"></canvas>
+        <br>
+        <input type="text" id="guess-input" placeholder="Enter your guess" onkeydown="checkEnter(event)">
+        <button onclick="checkGuess()">Submit</button>
+        <p id="message"></p>
+    </div>
+
+    <!-- End Screen -->
+    <div id="end-screen" class="container">
+        <h2>Well Done!</h2>
+        <p>Your final score is: <span id="final-score">0</span></p>
+        <button class="reset-btn" onclick="resetGame()">Reset</button>
+    </div>
+
+    <script>
+        const imageNames = ["tony.png", "jake.png", "david.png"]; // Add more images as needed
+        let currentImageIndex = 0;
+        let score = 0;
+        let pixelSize = 30;
+        let timer = 15;
+        let interval;
+        let img = new Image();
+        const canvas = document.getElementById("pixelCanvas");
+        const ctx = canvas.getContext("2d");
+
+        function shuffleImages() {
+            for (let i = imageNames.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [imageNames[i], imageNames[j]] = [imageNames[j], imageNames[i]]; // Swap elements
+            }
+        }
+
+        function startGame() {
+            shuffleImages(); // Shuffle images every time the game starts
+            document.getElementById("main-menu").style.display = "none";
+            document.getElementById("game-screen").style.display = "flex";
+            loadImage();
+        }
+
+        function loadImage() {
+            if (currentImageIndex >= imageNames.length) {
+                endGame();
+                return;
+            }
+
+            img.src = "images/" + imageNames[currentImageIndex];
+            img.onload = function() {
+                canvas.width = 400;
+                canvas.height = (img.height / img.width) * 400;
+                startPixelation();
+            };
+        }
+
+        function startPixelation() {
+            pixelSize = 30;
+            timer = 15;
+            document.getElementById("time").innerText = timer;
+            interval = setInterval(() => {
+                if (pixelSize > 1) pixelSize -= 2;
+                drawPixelated(pixelSize);
+
+                if (timer > 0) {
+                    timer--;
+                    document.getElementById("time").innerText = timer;
+                } else {
+                    clearInterval(interval);
+                    nextRound();
+                }
+            }, 1000);
+        }
+
+        function drawPixelated(pixelSize) {
+            const tempCanvas = document.createElement("canvas");
+            const tempCtx = tempCanvas.getContext("2d");
+
+            tempCanvas.width = canvas.width / pixelSize;
+            tempCanvas.height = canvas.height / pixelSize;
+
+            tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
+        }
+
+        function checkGuess() {
+            const guess = document.getElementById("guess-input").value.toLowerCase();
+            const correctAnswer = imageNames[currentImageIndex].split(".")[0].toLowerCase();
+
+            if (guess === correctAnswer) {
+                clearInterval(interval);
+                let pointsEarned = timer * 10;
+                score += pointsEarned;
+                document.getElementById("score-value").innerText = score;
+                document.getElementById("message").innerText = `Correct! +${pointsEarned} points`;
+                setTimeout(nextRound, 2000);
+            } else {
+                document.getElementById("message").innerText = "Try again!";
+            }
+        }
+
+        function nextRound() {
+            currentImageIndex++;
+            document.getElementById("message").innerText = "";
+            document.getElementById("guess-input").value = "";
+            loadImage();
+        }
+
+        function endGame() {
+            document.getElementById("game-screen").style.display = "none";
+            document.getElementById("end-screen").style.display = "flex";
+            document.getElementById("final-score").innerText = score;
+        }
+
+        function resetGame() {
+            currentImageIndex = 0;
+            score = 0;
+            document.getElementById("score-value").innerText = score;
+            shuffleImages(); // Shuffle images when resetting the game
+            document.getElementById("end-screen").style.display = "none";
+            document.getElementById("main-menu").style.display = "flex";
+        }
+
+        // Add event listener for Enter key
+        function checkEnter(event) {
+            if (event.key === "Enter") {
+                checkGuess();
+            }
+        }
+    </script>
+</body>
+</html>
